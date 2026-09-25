@@ -1,0 +1,87 @@
+/* ============================================================
+   RentRover AI — tokens.css
+   Design tokens, reset, base typography, layout primitives.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --color-ink:    #1c1710;
+  --color-coal:   #2c2418;
+  --color-clay:   #6b4a2c;
+  --color-sand:   #cfa672;
+  --color-linen:  #ecdfc4;
+  --color-paper:  #f8f3e9;
+  --color-ocean:  #4c7f92;
+  --color-moss:   #4f7a5a;
+  --color-coral:  #d9633b;
+  --color-honey:  #e2a52c;
+  --color-white:  #fffdf9;
+
+  --bg-primary:   var(--color-paper);
+  --bg-dark:      var(--color-ink);
+  --text-primary: var(--color-ink);
+  --text-muted:   var(--color-clay);
+  --accent:       var(--color-ocean);
+  --accent-warm:  var(--color-coral);
+  --border:       rgba(107,74,44,0.18);
+  --shadow-card:  0 8px 40px rgba(28,23,16,0.12);
+  --shadow-lg:    0 20px 60px rgba(28,23,16,0.20);
+
+  --status-success: #3f8a5f;
+  --status-warning: #c98a1c;
+  --status-danger:  #c0432f;
+  --status-info:    var(--color-ocean);
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+
+  --sp-1: .25rem; --sp-2: .5rem; --sp-3: .75rem; --sp-4: 1rem;
+  --sp-6: 1.5rem; --sp-8: 2rem; --sp-12: 3rem; --sp-16: 4rem; --sp-24: 6rem;
+
+  --r-sm: 6px; --r-md: 12px; --r-lg: 20px; --r-xl: 32px; --r-pill: 999px;
+
+  --ease: cubic-bezier(.25,.46,.45,.94);
+  --ease-spring: cubic-bezier(.34,1.56,.64,1);
+  --t-fast: 150ms; --t-med: 280ms; --t-slow: 500ms;
+
+  --content-max: 1200px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body { font-family: var(--font-body); background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; min-height: 100vh; }
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+ul, ol { list-style: none; }
+input, textarea, select { font-family: inherit; font-size: inherit; color: inherit; }
+
+h1,h2,h3,h4,h5 { font-family: var(--font-display); line-height: 1.15; font-weight: 700; }
+.display-xl { font-size: clamp(2.6rem,6.5vw,5.6rem); font-weight: 900; letter-spacing: -.02em; }
+.display-lg { font-size: clamp(2rem,5vw,3.6rem); font-weight: 700; }
+.display-md { font-size: clamp(1.5rem,3vw,2.3rem); font-weight: 700; }
+.body-lg { font-size: 1.125rem; }
+.body-sm { font-size: .875rem; }
+.label { font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
+.text-center { text-align:center; }
+.text-muted { color: var(--text-muted); }
+
+.container { max-width: var(--content-max); margin: 0 auto; padding: 0 var(--sp-6); }
+.section { max-width: var(--content-max); margin: 0 auto; padding: var(--sp-24) var(--sp-6); }
+.section__header { max-width: 620px; margin: 0 auto var(--sp-12); text-align: center; }
+.section__tag { display:inline-block; color: var(--accent-warm); font-weight:600; letter-spacing:.08em; text-transform:uppercase; font-size:.75rem; margin-bottom: var(--sp-3); }
+.section__title { margin-bottom: var(--sp-3); }
+.section__subtitle { color: var(--text-muted); }
+
+.grid { display: grid; gap: var(--sp-6); }
+.grid--3 { grid-template-columns: repeat(3, 1fr); }
+.grid--4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 900px) { .grid--3, .grid--4 { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 620px) { .grid--3, .grid--4 { grid-template-columns: 1fr; } }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-paper); }
+::-webkit-scrollbar-thumb { background: var(--color-sand); border-radius: var(--r-pill); }

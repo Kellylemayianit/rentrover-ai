@@ -1,0 +1,163 @@
+/* ============================================================
+   workspace.css — the whole app: a minimal top bar, three panes
+   (Stays / Ask / Cart) always visible side-by-side on desktop,
+   and a NotebookLM-style bottom nav bar that switches between
+   them on mobile. Plus the map/compare modals, in-app checkout
+   browser, and cart/booking/profile styling that live inside
+   the panes.
+   ============================================================ */
+
+html, body { height: 100%; }
+.app-shell { height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--color-paper); }
+
+/* ── Top bar (branding only — no nav links, nothing else to link to) ── */
+.top-bar { flex-shrink: 0; padding: var(--sp-3) var(--sp-5); background: var(--color-white); border-bottom: 1px solid var(--border); }
+.top-bar__brand { display: flex; align-items: center; gap: var(--sp-2); font-family: var(--font-display); font-weight: 700; font-size: 1rem; }
+.top-bar__mark { font-size: 1.15rem; }
+
+/* ── Three-pane grid (desktop) ────────────────────────────── */
+.app-panes { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(280px, 30%) 1fr minmax(300px, 30%); }
+
+.pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--color-white); }
+.pane--stays { border-right: 1px solid var(--border); position: relative; }
+.pane--ask { background: var(--color-paper); }
+.pane--cart { border-left: 1px solid var(--border); }
+
+.pane__header {
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  padding: var(--sp-4) var(--sp-5); border-bottom: 1px solid var(--border); background: var(--color-white);
+  font-weight: 700; font-size: .95rem;
+}
+.pane__body { flex: 1; overflow-y: auto; padding: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-3); }
+
+/* Stays pane search */
+.pane-search { display: flex; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--color-white); }
+.pane-search__input { flex: 1; border: 1px solid var(--border); border-radius: var(--r-pill); padding: .5rem 1rem; font-size: .88rem; }
+.pane-search__input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.suggestion-chips--pane { padding: 0 var(--sp-4) var(--sp-3); border-bottom: 1px solid var(--border); background: var(--color-white); flex-shrink: 0; }
+
+/* Ask pane reuses .chat-messages / .chat-footer / .chat-input-row / .chat-input / .chat-send-btn from booking.css */
+.pane--ask .chat-messages { flex: 1; overflow-y: auto; padding: var(--sp-5); }
+.pane--ask .chat-footer { border-top: 1px solid var(--border); padding: var(--sp-4); background: var(--color-white); flex-shrink: 0; }
+
+/* ── Bottom nav (mobile only) — NotebookLM-style 3-button bar ── */
+.bottom-nav { display: none; }
+@media (max-width: 900px) {
+  .app-panes { grid-template-columns: 1fr; grid-template-rows: 1fr; padding-bottom: 64px; }
+  .pane { display: none; }
+  .app-panes[data-pane="stays"] .pane--stays,
+  .app-panes[data-pane="ask"] .pane--ask,
+  .app-panes[data-pane="cart"] .pane--cart { display: flex; }
+  .pane--stays, .pane--cart { border: none; }
+
+  .bottom-nav {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+    background: var(--color-white); border-top: 1px solid var(--border);
+    padding: var(--sp-2) 0 env(safe-area-inset-bottom, var(--sp-2));
+  }
+  .bottom-nav__btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: var(--sp-1); font-size: .68rem; font-weight: 600; color: var(--text-muted); position: relative;
+  }
+  .bottom-nav__btn[data-active="true"] { color: var(--accent-warm); }
+  .bottom-nav__badge {
+    position: absolute; top: -2px; right: calc(50% - 20px); min-width: 15px; height: 15px; border-radius: 999px;
+    background: var(--accent-warm); color: var(--color-white); font-size: .6rem; display: flex; align-items: center; justify-content: center;
+  }
+  .bottom-nav__badge[hidden] { display: none; }
+}
+
+/* ── Property result cards (Stays pane) ──────────────────────── */
+.msg-property__actions { display: flex; flex-direction: column; gap: var(--sp-2); align-items: stretch; }
+.msg-property__sources { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-top: 2px; }
+.msg-property__source-chip { font-size: .68rem; color: var(--text-muted); background: var(--color-linen); padding: .1rem .5rem; border-radius: var(--r-pill); }
+.msg-property.is-focused { outline: 2px solid var(--accent-warm); outline-offset: 2px; }
+
+/* ── Compare FAB + modal-hosted map/comparison ───────────── */
+.compare-fab {
+  position: absolute; bottom: var(--sp-5); left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: var(--sp-2); background: var(--color-ink); color: var(--color-white);
+  padding: .75rem 1.3rem; border-radius: var(--r-pill); font-weight: 600; font-size: .85rem; box-shadow: var(--shadow-lg);
+  z-index: 10; white-space: nowrap;
+}
+.compare-fab[hidden] { display: none; }
+
+.map-panel--modal { min-height: 360px; border-radius: var(--r-md); overflow: hidden; }
+.comparison-body--modal { padding: 0; overflow-x: auto; }
+.modal__panel:has(.comparison-body--modal) { max-width: 760px; }
+.modal__panel:has(.map-panel--modal) { max-width: 640px; }
+
+.map-panel--modal .map-panel__surface { position: relative; min-height: 360px; overflow: hidden; }
+.map-panel__terrain {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(79,122,90,.35) 0%, transparent 40%),
+    radial-gradient(circle at 75% 60%, rgba(76,127,146,.3) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(207,166,114,.3) 0%, transparent 40%),
+    var(--color-linen);
+}
+.map-panel__surface--empty { display: flex; align-items: center; justify-content: center; min-height: 240px; }
+.map-panel__placeholder { color: var(--text-muted); text-align: center; font-size: .9rem; line-height: 1.8; }
+.map-panel__caption { padding: var(--sp-2) var(--sp-4); font-size: .72rem; color: var(--text-muted); background: var(--color-white); border-top: 1px solid var(--border); }
+
+.map-pin {
+  position: absolute; transform: translate(-50%, -100%) rotate(-45deg); transform-origin: bottom left;
+  width: 30px; height: 30px; border-radius: 50% 50% 50% 0;
+  background: var(--accent-warm); color: var(--color-white); display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(28,23,16,.25); transition: transform var(--t-fast) var(--ease);
+}
+.map-pin span { transform: rotate(45deg); font-size: .72rem; font-weight: 700; }
+.map-pin:hover { transform: translate(-50%, -100%) rotate(-45deg) scale(1.12); }
+
+.comparison-table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.comparison-table th, .comparison-table td { padding: var(--sp-4); border-bottom: 1px solid var(--border); vertical-align: top; text-align: left; }
+.comparison-table thead th { font-family: var(--font-display); font-size: 1rem; font-weight: 700; }
+.compare-row-label { font-weight: 600; color: var(--text-muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.compare-pin-badge {
+  display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent-warm); color: var(--color-white); font-size: .72rem; font-weight: 700; margin-right: var(--sp-2);
+}
+.compare-gallery { display: flex; gap: var(--sp-2); }
+.compare-gallery img { width: 72px; height: 72px; object-fit: cover; border-radius: var(--r-sm); }
+.compare-amenities li { font-size: .82rem; margin-bottom: var(--sp-1); padding-left: var(--sp-3); position: relative; }
+.compare-amenities li::before { content: '•'; position: absolute; left: 0; color: var(--accent); }
+.compare-rating { font-weight: 700; }
+.compare-price-row { display: flex; align-items: center; gap: var(--sp-2); }
+.compare-price-platform { font-weight: 600; font-size: .82rem; }
+.compare-price-amount { font-weight: 700; }
+.compare-price-link { color: var(--accent); font-size: .8rem; font-weight: 600; margin-left: auto; }
+
+/* ── Cart pane: profile, cart, channels, bookings ────────────── */
+.cart-section { margin-top: var(--sp-6); padding-top: var(--sp-5); border-top: 1px solid var(--border); }
+.cart-section__title { font-weight: 700; font-size: .9rem; margin-bottom: var(--sp-2); }
+
+.profile-form { display: flex; flex-direction: column; gap: var(--sp-2); }
+.profile-form input { padding: .55rem .8rem; border: 1px solid var(--border); border-radius: var(--r-md); font-size: .85rem; }
+.profile-form input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.profile-form button { align-self: flex-start; }
+
+.channel-buttons { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+
+.platform-buttons { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-top: var(--sp-2); }
+.platform-btn {
+  font-size: .72rem; font-weight: 600; padding: .3rem .7rem; border-radius: var(--r-pill);
+  border: 1px solid var(--border); color: var(--text-muted); background: var(--color-white);
+}
+.platform-btn:hover { border-color: var(--accent-warm); color: var(--text-primary); }
+
+.order-card { background: var(--color-paper); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-2); }
+.order-card__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-1); }
+.order-card__platform { font-weight: 600; font-size: .85rem; }
+.badge { display: inline-flex; padding: .25rem .65rem; border-radius: var(--r-pill); font-size: .72rem; font-weight: 600; }
+.badge--success { background: rgba(63,138,95,.12); color: var(--status-success); }
+.badge--warning { background: rgba(201,138,28,.12); color: var(--status-warning); }
+.badge--info { background: rgba(76,127,146,.12); color: var(--color-ocean); }
+.badge--neutral { background: var(--color-linen); color: var(--text-muted); }
+
+/* ── In-app checkout browser ──────────────────────────────── */
+.inapp-browser { position: fixed; inset: 0; z-index: 400; display: flex; flex-direction: column; background: var(--color-ink); }
+.inapp-browser__bar { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-3) var(--sp-5); background: var(--color-coal); flex-shrink: 0; }
+.inapp-browser__title { color: var(--color-white); font-weight: 700; font-size: .92rem; }
+.inapp-browser__actions { display: flex; gap: var(--sp-2); }
+.inapp-browser__hint { background: rgba(226,165,44,.15); color: var(--color-honey); font-size: .78rem; padding: var(--sp-2) var(--sp-5); flex-shrink: 0; }
+.inapp-browser__frame { flex: 1; width: 100%; border: none; background: var(--color-white); }

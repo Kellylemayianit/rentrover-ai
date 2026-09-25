@@ -1,61 +1,74 @@
 # RentRover AI
 
-A global travel-search frontend. No "concierge," no "itinerary" — you tell
-it what you want in plain words, it shows you real stays, you save a few
-to a cart, and you book on whichever platform you trust (Booking.com,
-Airbnb, Trip.com) without leaving the site.
+One page. Three panes. Nothing else.
 
-The main experience (`#/app`) is three panes shown side-by-side on
-desktop — **Stays**, **Ask**, **Cart** — inspired by NotebookLM's
-Sources/Chat/Studio layout. On mobile they collapse into three tabs.
+- **Stays** — search a place or requirement, browse results as cards. This
+  is the only pane that talks to the search backend.
+- **Ask** — a plain-language Q&A box, grounded in whatever Stays currently
+  has loaded (price, ratings, amenities, a specific stay by name). It does
+  **not** run new searches — that's Stays' job. Same relationship as
+  NotebookLM's Chat to its Sources.
+- **Cart** — your picks, checkout via a real booking platform in an in-app
+  browser, your booking history, and a local (no-login) contact profile —
+  cart, bookings, and profile in one pane.
 
-This build has **no local/mock data** — every property and search result
-comes from the live search backend via `src/services/api.js`.
+Always visible side-by-side on desktop; a bottom nav bar (NotebookLM's
+mobile pattern) switches between them under 900px.
+
+No marketing homepage, no login, no admin dashboard — just this.
 
 ## Architecture
 
 ```
-index.html          SPA shell — <link> tags + <script type="module" src="src/app.js">
+index.html          the entire shell — <link> tags + <script type="module" src="src/app.js">
 styles/
   tokens.css           variables, reset, base type, layout primitives
   utilities/buttons.css
-  components/           header, hero, card (+ shared modal), booking (chat log + checkout bits), footer, workspace (3-pane layout, map/compare modals, in-app browser, orders)
-  dashboard/             sidebar/bottom-nav, stat cards, admin shell/tables/forms
+  components/
+    modal.css            the shared modal (map view, comparison table)
+    booking.css           Ask pane's message log + input, Cart pane's items/dates
+    workspace.css          top bar, 3-pane grid, bottom nav, checkout/profile/orders styling
 src/
-  app.js               route dispatch + all delegated event wiring (the kernel)
-  router.js            hash parsing + change subscription
-  pages/                 one file per route, composes components + fetches data
-  components/            pure render functions (public + components/admin/)
+  app.js               the kernel — mounts the one page, delegates every data-action click
+  pages/
+    workspace.js          the entire app: Stays, Ask, and Cart panes, all in one file
+  components/
+    mapPanel.js            schematic map (modal), used by Stays' "Map" button
+    comparisonMatrix.js    the comparison table (modal), used by Stays' "Compare" flow
+    inAppBrowser.js         full-screen checkout overlay used by Cart's platform buttons
+    modal.js                 shared modal open/close
   services/
     api.js                 live HTTP client — the ONLY file that talks to the backend
-    dataLoader.js           the only data import surface pages/components use (adds caching)
-    cartStore.js            client-side cart state + subscribers
-    ordersStore.js          client-side order tracking (simulated auto-progress — see below)
-    propertyRegistry.js     shared in-memory id → property lookup, so "Add to cart" works
-                             the same way no matter which page/pane fetched the data
+    dataLoader.js            thin cache over api.js
+    cartStore.js              client-side cart state
+    ordersStore.js             client-side booking/order tracking (simulated — see below)
+    profileStore.js             local-only name/contact, NOT an account system
+    propertyRegistry.js          shared id → property lookup so "Add to cart" and Ask's
+                                  "View in Stays" links work no matter which pane fetched the data
   utilities/
-    helpers.js              DOM query/inject helpers, formatting, toast
-    booking.js               date validation + booking-message builder
-    channelLinks.js          wa.me / t.me / WeChat / mailto: / tel: link builders
-    platformLinks.js         builds the checkout URL for Booking.com/Airbnb/Trip.com
-    auth.js                  mock admin login check + in-memory session flag
-    icons.js                 shared inline-SVG icon set
+    helpers.js               DOM helpers, formatting, toast
+    askEngine.js               Ask's grounded-answer logic — see below
+    booking.js                 date validation + booking-message builder
+    channelLinks.js            wa.me / t.me / WeChat / mailto: / tel: link builders
+    platformLinks.js            builds the checkout URL for Booking.com/Airbnb/Trip.com
+    icons.js                    shared inline-SVG icon set
 ```
 
-## The three panes (`#/app`)
+There's no router — there's nothing to route between. Deep links use plain
+query params on the one URL: `?q=lisbon` runs a search on load, `?pane=cart`
+opens straight to the Cart pane (used by nothing in-app right now, but
+handy for a shared link).
 
-- **Stays** — search box + result cards. Each card can be added to the cart
-  or marked for comparison (pick 2 → a "Compare" button opens a modal with
-  a merged comparison table). A "Map" button opens a schematic map
-  (illustrative pins, not a real map SDK — see `components/mapPanel.js`).
-- **Ask** — a chat box. Typing a question runs the same search as the
-  Stays search box and fills that pane with results; Ask just narrates
-  what it found.
-- **Cart** — what you've added, a check-in/out date picker, per-stay
-  "Book via Booking.com / Airbnb / Trip.com" buttons (opens an **in-app
-  browser** overlay, see below), a "Talk to our team" section
-  (WhatsApp / Telegram / WeChat), and a running list of orders with status
-  badges.
+## How Ask actually works
+
+`utilities/askEngine.js` is a deterministic, rule-based Q&A over whatever
+properties Stays currently has loaded (cheapest/priciest, best-rated,
+"under $X", amenity keywords, "tell me about \<name\>"). It's a stand-in for
+real grounded LLM Q&A — the seam to swap in a real one is that exact
+function signature: `answerQuestion(question, stays) → { text, highlightIds }`.
+Replace the body with a call to something like `POST /api/ask { question,
+stayIds }` (a small model over the normalized listing JSON, per the earlier
+Cloudflare Workers AI architecture notes) once that endpoint exists.
 
 ## In-app checkout browser
 
@@ -72,23 +85,22 @@ instead" button rather than pretending the embed will always work.
 
 ## Orders & "automatic" progress
 
-There is no order-management backend yet. `services/ordersStore.js`
-creates a client-side order the moment someone opens a platform's checkout,
-and steps its status (`Requested → Confirmed → Upcoming stay → Completed`)
-on a timer purely as a demo of what the Cart pane's tracking UI will look
-like. Replace `_simulateProgress` with real status updates (a webhook from
-the booking platform, or a poll against a real `/api/orders/:id`) once
-that backend exists.
+There is no order-management backend. `services/ordersStore.js` creates a
+client-side order the moment someone opens a platform's checkout, and steps
+its status (`Requested → Confirmed → Upcoming stay → Completed`) on a timer
+purely as a demo of the Cart pane's tracking UI. Replace `_simulateProgress`
+with real status updates once a backend exists for that.
 
 ## Contact channels
 
 - **WhatsApp** — `wa.me` link with the cart summary pre-filled. Works as expected.
-- **Telegram** — uses `t.me/share/url`, Telegram's share-intent link; it opens
-  Telegram's own chat picker with the message attached. There's no public
-  Telegram URL that opens a prefilled DM to one specific user the way `wa.me` does.
-- **WeChat** — there is no public web link that opens a chat with a specific
-  contact. `channelLinks.js`'s `wechatContact()` just returns the ID/QR note
-  to display — it does not pretend to deep-link.
+- **Telegram** — uses `t.me/share/url`, Telegram's real share-intent link;
+  it opens Telegram's own chat picker with the message attached. There's no
+  public Telegram URL that opens a prefilled DM to one specific user the
+  way `wa.me` does.
+- **WeChat** — there is no public web link that opens a chat with a
+  specific contact. `channelLinks.js`'s `wechatContact()` just returns the
+  ID/QR note to display — it does not pretend to deep-link.
 
 ## Backend contract
 
@@ -107,16 +119,7 @@ this normalized shape:
 }
 ```
 
-### Endpoint status
-
-| Endpoint | Method | Used by | Status |
-|---|---|---|---|
-| `/api/search/combined?q=&region=&type=&maxPrice=` | GET | Stays search, Ask pane, landing page catalog | **Live per spec** |
-| `/api/properties/:id` | GET | — | Not yet on backend (unused — comparisons reuse already-fetched results, see `propertyRegistry.js`) |
-| `/api/destinations` | GET | landing page destination cards | Not yet on backend |
-| `/api/bookings` | GET / POST | admin bookings list, enquiry persistence | Not yet on backend |
-| `/api/properties` | POST / PUT / DELETE | admin add/edit/delete | Not yet on backend |
-
+The only endpoint this app calls: `GET /api/search/combined?q=&region=&type=&maxPrice=`.
 Set the backend origin in `src/services/api.js`:
 
 ```js
@@ -126,32 +129,15 @@ const API_BASE = ''; // e.g. 'https://api.rentrover.ai' — empty = same-origin
 **CORS:** the backend must allow requests from wherever this frontend is
 served, since `api.js` calls it directly from the browser.
 
-**Failure handling:** every page fetch is wrapped in try/catch and shows an
-inline "can't reach the backend" message rather than crashing or silently
-falling back to fake data — there is no mock data left to fall back to.
-
-## Routes
-
-| Hash                     | Page                                  |
-|---------------------------|----------------------------------------|
-| `#/`                       | Landing page (hero, destinations, featured stays) |
-| `#/app`                    | The three-pane app (Stays / Ask / Cart) |
-| `#/app?q=...`               | Pre-run a search on load |
-| `#/app?pane=cart`           | Open straight to the Cart pane (mobile) |
-| `#/chat`                    | Alias for `#/app`, kept so old links still work |
-| `#/login`                    | Mock admin login (`admin@rentrover.ai` / `demo1234`) |
-| `#/dashboard`                 | Admin overview (stat cards + recent bookings) |
-| `#/dashboard/properties`       | Admin property list (add/edit/delete — wired to the not-yet-live endpoints above) |
-| `#/dashboard/bookings`          | Admin booking list |
-
-The admin dashboard is a separate, business-facing area — distinct from
-the Cart pane's customer-facing order tracking.
+**Failure handling:** every fetch is wrapped in try/catch and shows an
+inline "can't reach the backend" message rather than crashing — there is
+no mock data to fall back to.
 
 ## Notes
 
 - No build step — plain ES modules loaded via `<script type="module">`.
   Serve the folder with any static file server (the `file://` protocol
   will not allow module imports).
-- Admin auth is a mock (`sessionStorage` flag) for prototyping only —
-  replace `utilities/auth.js` with a real auth endpoint before handling
-  real guest/booking data.
+- Cart and bookings are per-session (in-memory, cleared on refresh); the
+  profile (name/contact) is the one thing kept in `localStorage` so it
+  survives a refresh, since it's just a convenience prefill, not an account.
