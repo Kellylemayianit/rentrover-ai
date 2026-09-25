@@ -1,0 +1,61 @@
+/* ── Property / Destination cards ─────────────────────────── */
+.property-card {
+  background: var(--color-white); border-radius: var(--r-lg); overflow: hidden;
+  box-shadow: var(--shadow-card); transition: transform var(--t-med) var(--ease), box-shadow var(--t-med) var(--ease);
+  display: flex; flex-direction: column;
+}
+.property-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.property-card__image-wrap { position: relative; aspect-ratio: 4/3; background: var(--color-linen); }
+.property-card__image { width: 100%; height: 100%; object-fit: cover; }
+.property-card__badge {
+  position: absolute; top: var(--sp-3); left: var(--sp-3);
+  background: rgba(28,23,16,.75); color: var(--color-white);
+  font-size: .72rem; font-weight: 600; padding: .3rem .7rem; border-radius: var(--r-pill);
+}
+.property-card__body { padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-2); flex: 1; }
+.property-card__location { font-size: .78rem; color: var(--text-muted); }
+.property-card__title { font-size: 1.1rem; }
+.property-card__desc { font-size: .85rem; color: var(--text-muted); flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.property-card__footer { display: flex; align-items: center; justify-content: space-between; margin-top: var(--sp-3); padding-top: var(--sp-3); border-top: 1px solid var(--border); }
+.property-card__price { font-size: .78rem; color: var(--text-muted); }
+.property-card__price strong { display: block; color: var(--text-primary); font-size: 1rem; }
+.property-card__add-btn {
+  background: var(--color-ink); color: var(--color-white); font-size: .8rem; font-weight: 600;
+  padding: .5rem 1rem; border-radius: var(--r-pill); transition: background var(--t-fast) var(--ease);
+}
+.property-card__add-btn:hover { background: var(--accent-warm); }
+.property-card__add-btn[data-added="true"] { background: var(--status-success); }
+
+/* Destination card (world regions, replaces old fixed local zones) */
+.destination-card {
+  position: relative; border-radius: var(--r-lg); overflow: hidden; cursor: pointer;
+  min-height: 320px; display: flex; align-items: flex-end;
+  box-shadow: var(--shadow-card); transition: transform var(--t-med) var(--ease);
+}
+.destination-card:hover { transform: translateY(-4px) scale(1.01); }
+.destination-card__bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.destination-card__overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(28,23,16,0) 30%, rgba(28,23,16,.85) 100%); }
+.destination-card__body { position: relative; z-index: 2; padding: var(--sp-6); color: var(--color-white); }
+.destination-card__region { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; opacity: .8; margin-bottom: var(--sp-2); display:block; }
+.destination-card__title { font-size: 1.4rem; margin-bottom: var(--sp-2); }
+.destination-card__desc { font-size: .85rem; opacity: .85; margin-bottom: var(--sp-3); }
+.destination-card__link { font-size: .85rem; font-weight: 600; }
+
+/* ── Shared modal (used by both public property detail & admin forms) ─ */
+.modal { position: fixed; inset: 0; z-index: 300; display: none; }
+.modal.is-open { display: block; }
+.modal__backdrop { position: absolute; inset: 0; background: rgba(28,23,16,.55); animation: fadeIn var(--t-med) var(--ease); }
+.modal__panel {
+  position: relative; z-index: 2; max-width: 560px; margin: var(--sp-16) auto; background: var(--color-white);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-lg); max-height: 82vh; overflow-y: auto;
+  animation: slideUp var(--t-med) var(--ease-spring);
+}
+.modal__header { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-5) var(--sp-6); border-bottom: 1px solid var(--border); }
+.modal__close { font-size: 1.4rem; line-height: 1; color: var(--text-muted); }
+.modal__body { padding: var(--sp-6); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 620px) {
+  .modal__panel { margin: var(--sp-8) var(--sp-4); }
+}
