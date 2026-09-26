@@ -41,8 +41,9 @@ src/
     api.js                 live HTTP client — the ONLY file that talks to the backend
     dataLoader.js            thin cache over api.js
     cartStore.js              client-side cart state
-    ordersStore.js             client-side booking/order tracking (simulated — see below)
-    profileStore.js             local-only name/contact, NOT an account system
+    ordersStore.js             booking/order tracking, persisted to localStorage, scoped to the signed-in account (simulated auto-progress — see below)
+    authStore.js               sign up / log in / log out — real endpoint first, local demo fallback
+    themeStore.js              light/dark toggle, persisted, defaults to system preference
     propertyRegistry.js          shared id → property lookup so "Add to cart" and Ask's
                                   "View in Stays" links work no matter which pane fetched the data
   utilities/
@@ -58,6 +59,27 @@ There's no router — there's nothing to route between. Deep links use plain
 query params on the one URL: `?q=lisbon` runs a search on load, `?pane=cart`
 opens straight to the Cart pane (used by nothing in-app right now, but
 handy for a shared link).
+
+## Look & feel
+
+Grey glassmorphism: frosted, translucent panes over a soft blurred-blob
+background, in light or dark — toggle via the sun/moon button in the top
+bar (`services/themeStore.js`). It remembers your choice (`localStorage`)
+and defaults to your system preference the first time. Every heading and
+subheading in the app is centered by default (`tokens.css`'s `h1,h2,h3,
+.heading,.subheading` rule) rather than left-aligned at the margin.
+
+## Accounts
+
+The top bar's left button opens sign in / sign up. There's no user-account
+backend yet (see the endpoint table below) — `services/authStore.js` tries
+the real endpoint first, and if that fails, falls back to a small
+localStorage-backed demo account store so the flow is fully usable today.
+That fallback is explicitly **not secure** (passwords are only lightly
+obscured, not hashed) and is why "measuring users" doesn't actually work
+yet — none of this data leaves the browser until `/api/auth/*` exists.
+Signing in reattaches any cart/bookings made as a guest to your account,
+and both persist in `localStorage` across visits from then on.
 
 ## How Ask actually works
 
@@ -85,11 +107,14 @@ instead" button rather than pretending the embed will always work.
 
 ## Orders & "automatic" progress
 
-There is no order-management backend. `services/ordersStore.js` creates a
-client-side order the moment someone opens a platform's checkout, and steps
-its status (`Requested → Confirmed → Upcoming stay → Completed`) on a timer
-purely as a demo of the Cart pane's tracking UI. Replace `_simulateProgress`
-with real status updates once a backend exists for that.
+There is no order-management backend. `services/ordersStore.js` persists
+orders to `localStorage`, scoped to the signed-in account (or to the
+current browser as a guest, until you sign in — signing in reattaches
+those). It creates an order the moment someone opens a platform's
+checkout, and steps its status (`Requested → Confirmed → Upcoming stay →
+Completed`) on a timer purely as a demo of the Cart pane's tracking UI.
+Replace `_simulateProgress` with real status updates once a backend
+exists for that.
 
 ## Contact channels
 
@@ -119,7 +144,15 @@ this normalized shape:
 }
 ```
 
-The only endpoint this app calls: `GET /api/search/combined?q=&region=&type=&maxPrice=`.
+The only endpoint this app calls: `GET /api/search/combined?q=&region=&type=&maxPrice=`,
+plus the auth calls below (both fall back to a local demo — see "Accounts").
+
+| Endpoint | Method | Status |
+|---|---|---|
+| `/api/search/combined` | GET | **Live per spec** |
+| `/api/auth/signup` | POST `{name,email,password}` | Not yet on backend — local demo fallback |
+| `/api/auth/login` | POST `{email,password}` | Not yet on backend — local demo fallback |
+
 Set the backend origin in `src/services/api.js`:
 
 ```js
@@ -138,6 +171,6 @@ no mock data to fall back to.
 - No build step — plain ES modules loaded via `<script type="module">`.
   Serve the folder with any static file server (the `file://` protocol
   will not allow module imports).
-- Cart and bookings are per-session (in-memory, cleared on refresh); the
-  profile (name/contact) is the one thing kept in `localStorage` so it
-  survives a refresh, since it's just a convenience prefill, not an account.
+- Cart, bookings, your theme choice, and your account are all persisted in
+  `localStorage`, so they survive a refresh. None of it is synced to a
+  server yet — see the endpoint tables above for what that needs.

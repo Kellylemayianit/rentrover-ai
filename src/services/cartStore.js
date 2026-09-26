@@ -1,20 +1,26 @@
 /**
- * cartStore.js — client-side cart state (what the old build called an
- * "itinerary" — renamed because nobody talks like that). Pages/components
- * read it through the functions below and subscribe via onChange().
+ * cartStore.js — cart state, persisted to localStorage so it survives a
+ * refresh (what the old build called an "itinerary" — renamed because
+ * nobody talks like that). Pages/components read it through the
+ * functions below and subscribe via onChange().
  */
 
-/** @type {Array<{id:string,name:string,type:string,location:string,priceEstimate:string,emoji:string}>} */
-let cart = [];
-
+const STORAGE_KEY = 'rentrover_cart';
 const _listeners = [];
+
+function _read() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+}
+function _write(cart) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cart)); } catch { /* not persisted this session */ }
+}
 
 export function onChange(fn) {
   _listeners.push(fn);
 }
 
 function _notify() {
-  _listeners.forEach(fn => fn([...cart]));
+  _listeners.forEach(fn => fn(getCart()));
 }
 
 /**
@@ -22,6 +28,7 @@ function _notify() {
  * @returns {boolean} true if added, false if it was already in the cart
  */
 export function addToCart(property) {
+  const cart = _read();
   if (cart.some(item => item.id === property.id)) return false;
   cart.push({
     id: property.id,
@@ -34,28 +41,29 @@ export function addToCart(property) {
     city: property.city,
     country: property.country,
   });
+  _write(cart);
   _notify();
   return true;
 }
 
 export function removeFromCart(id) {
-  cart = cart.filter(item => item.id !== id);
+  _write(_read().filter(item => item.id !== id));
   _notify();
 }
 
 export function isInCart(id) {
-  return cart.some(item => item.id === id);
+  return _read().some(item => item.id === id);
 }
 
 export function getCart() {
-  return [...cart];
+  return _read();
 }
 
 export function getCartCount() {
-  return cart.length;
+  return _read().length;
 }
 
 export function clearCart() {
-  cart = [];
+  _write([]);
   _notify();
 }

@@ -12,10 +12,16 @@ import {
   handleAddToCart, handleViewMap, handleToggleCompare, openComparisonView,
   handleRemoveFromCart, handleCheckoutPlatform, handleContactChannel,
   switchPane, closeInAppBrowser, handleFocusProperty,
+  handleToggleTheme, handleOpenAccount, handleLogout, handleToggleAuthMode, handleAuthSubmit,
 } from './pages/workspace.js';
 import { closeModal } from './components/modal.js';
+import { initTheme } from './services/themeStore.js';
 
 const ROOT_ID = 'app-root';
+
+// Apply the saved/system theme immediately — before the page renders —
+// so there's no flash of the wrong palette.
+initTheme();
 
 function boot() {
   const root = document.getElementById(ROOT_ID);
@@ -82,9 +88,35 @@ document.addEventListener('click', (e) => {
       handleFocusProperty(el.dataset.propertyId);
       break;
 
+    case 'toggle-theme':
+      handleToggleTheme();
+      break;
+
+    case 'open-account':
+      closeModal(); // in case it was clicked from inside another modal context
+      handleOpenAccount();
+      break;
+
+    case 'do-logout':
+      handleLogout();
+      break;
+
+    case 'toggle-auth-mode':
+      handleToggleAuthMode();
+      break;
+
     default:
       break;
   }
+});
+
+// ── Delegated submit handling (only the auth form needs this) ──
+
+document.addEventListener('submit', (e) => {
+  const form = e.target.closest('#auth-form');
+  if (!form) return;
+  e.preventDefault();
+  handleAuthSubmit(form);
 });
 
 // ── Boot ─────────────────────────────────────────────────────

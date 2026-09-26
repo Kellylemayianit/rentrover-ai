@@ -1,42 +1,56 @@
 /* ============================================================
-   RentRover AI — tokens.css
-   Design tokens, reset, base typography, layout primitives.
+   tokens.css — grey glassmorphism design system, with light/dark
+   themes toggled via [data-theme] on <html> (see services/themeStore.js).
+   Reset, base typography, and layout primitives live here too.
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --color-ink:    #1c1710;
-  --color-coal:   #2c2418;
-  --color-clay:   #6b4a2c;
-  --color-sand:   #cfa672;
-  --color-linen:  #ecdfc4;
-  --color-paper:  #f8f3e9;
-  --color-ocean:  #4c7f92;
-  --color-moss:   #4f7a5a;
-  --color-coral:  #d9633b;
-  --color-honey:  #e2a52c;
-  --color-white:  #fffdf9;
+  /* ── Light theme (default) ─────────────────────────────── */
+  --grey-950: #0e0f12;
+  --grey-900: #16181c;
+  --grey-800: #23262b;
+  --grey-700: #383c43;
+  --grey-600: #565b64;
+  --grey-500: #757b85;
+  --grey-400: #9ba1aa;
+  --grey-300: #c3c7cd;
+  --grey-200: #dde0e4;
+  --grey-100: #eceef1;
+  --grey-50:  #f6f7f9;
+  --white:    #ffffff;
 
-  --bg-primary:   var(--color-paper);
-  --bg-dark:      var(--color-ink);
-  --text-primary: var(--color-ink);
-  --text-muted:   var(--color-clay);
-  --accent:       var(--color-ocean);
-  --accent-warm:  var(--color-coral);
-  --border:       rgba(107,74,44,0.18);
-  --shadow-card:  0 8px 40px rgba(28,23,16,0.12);
-  --shadow-lg:    0 20px 60px rgba(28,23,16,0.20);
-
-  --status-success: #3f8a5f;
+  --accent:       #5b6cf0;
+  --accent-hover: #4a59d9;
+  --accent-soft:  rgba(91,108,240,.14);
+  --status-success: #3f9b6b;
   --status-warning: #c98a1c;
-  --status-danger:  #c0432f;
-  --status-info:    var(--color-ocean);
+  --status-danger:  #d9483f;
+  --status-info:    #4c8fd9;
+
+  --bg-page-1: #eef0f3;
+  --bg-page-2: #e2e5ea;
+  --bg-blob-a: rgba(91,108,240,.16);
+  --bg-blob-b: rgba(63,155,107,.12);
+  --bg-blob-c: rgba(217,72,63,.08);
+
+  --text-primary: var(--grey-900);
+  --text-muted:   var(--grey-600);
+  --border:       rgba(20,22,26,.10);
+
+  /* Glass surface — the core of the "grey glassmorphism" look */
+  --glass-bg:      rgba(255,255,255,.55);
+  --glass-bg-soft: rgba(255,255,255,.38);
+  --glass-border:  rgba(255,255,255,.55);
+  --glass-blur:    18px;
+  --glass-shadow:  0 8px 32px rgba(20,22,26,.10);
+  --glass-shadow-lg: 0 20px 60px rgba(20,22,26,.18);
 
   --font-display: 'Fraunces', Georgia, serif;
   --font-body:    'Inter', system-ui, sans-serif;
 
-  --sp-1: .25rem; --sp-2: .5rem; --sp-3: .75rem; --sp-4: 1rem;
+  --sp-1: .25rem; --sp-2: .5rem; --sp-3: .75rem; --sp-4: 1rem; --sp-5: 1.25rem;
   --sp-6: 1.5rem; --sp-8: 2rem; --sp-12: 3rem; --sp-16: 4rem; --sp-24: 6rem;
 
   --r-sm: 6px; --r-md: 12px; --r-lg: 20px; --r-xl: 32px; --r-pill: 999px;
@@ -44,16 +58,49 @@
   --ease: cubic-bezier(.25,.46,.45,.94);
   --ease-spring: cubic-bezier(.34,1.56,.64,1);
   --t-fast: 150ms; --t-med: 280ms; --t-slow: 500ms;
+}
 
-  --content-max: 1200px;
+/* ── Dark theme ───────────────────────────────────────────── */
+:root[data-theme="dark"] {
+  --text-primary: var(--grey-50);
+  --text-muted:   var(--grey-400);
+  --border:       rgba(255,255,255,.10);
+
+  --bg-page-1: #101114;
+  --bg-page-2: #1a1c20;
+  --bg-blob-a: rgba(91,108,240,.22);
+  --bg-blob-b: rgba(63,155,107,.14);
+  --bg-blob-c: rgba(217,72,63,.10);
+
+  --glass-bg:      rgba(30,32,37,.55);
+  --glass-bg-soft: rgba(30,32,37,.38);
+  --glass-border:  rgba(255,255,255,.10);
+  --glass-shadow:  0 8px 32px rgba(0,0,0,.35);
+  --glass-shadow-lg: 0 20px 60px rgba(0,0,0,.5);
+
+  --accent:       #7c8bfa;
+  --accent-hover: #94a1fb;
+  --accent-soft:  rgba(124,139,250,.18);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
-body { font-family: var(--font-body); background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; min-height: 100vh; }
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 900px 600px at 12% 8%, var(--bg-blob-a) 0%, transparent 60%),
+    radial-gradient(ellipse 800px 700px at 90% 20%, var(--bg-blob-b) 0%, transparent 55%),
+    radial-gradient(ellipse 700px 600px at 50% 100%, var(--bg-blob-c) 0%, transparent 55%),
+    linear-gradient(160deg, var(--bg-page-1), var(--bg-page-2));
+  background-attachment: fixed;
+  transition: background var(--t-med) var(--ease);
+}
 img { display: block; max-width: 100%; height: auto; }
 a { color: inherit; text-decoration: none; }
-button { cursor: pointer; font-family: inherit; border: none; background: none; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; color: inherit; }
 ul, ol { list-style: none; }
 input, textarea, select { font-family: inherit; font-size: inherit; color: inherit; }
 
@@ -65,16 +112,16 @@ h1,h2,h3,h4,h5 { font-family: var(--font-display); line-height: 1.15; font-weigh
 .body-sm { font-size: .875rem; }
 .label { font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 
+/* Every heading/subheading in the app is centered by default — see
+   individual component CSS for the (rare) exceptions. */
+.heading, h1, h2, h3 { text-align: center; }
+.subheading { text-align: center; color: var(--text-muted); }
+
 .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
 .text-center { text-align:center; }
 .text-muted { color: var(--text-muted); }
 
-.container { max-width: var(--content-max); margin: 0 auto; padding: 0 var(--sp-6); }
-.section { max-width: var(--content-max); margin: 0 auto; padding: var(--sp-24) var(--sp-6); }
-.section__header { max-width: 620px; margin: 0 auto var(--sp-12); text-align: center; }
-.section__tag { display:inline-block; color: var(--accent-warm); font-weight:600; letter-spacing:.08em; text-transform:uppercase; font-size:.75rem; margin-bottom: var(--sp-3); }
-.section__title { margin-bottom: var(--sp-3); }
-.section__subtitle { color: var(--text-muted); }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 var(--sp-6); }
 
 .grid { display: grid; gap: var(--sp-6); }
 .grid--3 { grid-template-columns: repeat(3, 1fr); }
@@ -82,6 +129,20 @@ h1,h2,h3,h4,h5 { font-family: var(--font-display); line-height: 1.15; font-weigh
 @media (max-width: 900px) { .grid--3, .grid--4 { grid-template-columns: repeat(2,1fr); } }
 @media (max-width: 620px) { .grid--3, .grid--4 { grid-template-columns: 1fr; } }
 
+/* ── Glass surface utility — the shared look for panes, cards, modal ── */
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* A neutral tint that's automatically correct in both themes, since it's
+   mixed from --text-primary (dark in light mode, light in dark mode)
+   rather than a fixed grey — used for chips/badges/soft fills. */
+:root { --soft-fill: color-mix(in srgb, var(--text-primary) 7%, transparent); --soft-fill-strong: color-mix(in srgb, var(--text-primary) 14%, transparent); }
+
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--color-paper); }
-::-webkit-scrollbar-thumb { background: var(--color-sand); border-radius: var(--r-pill); }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--grey-400); border-radius: var(--r-pill); }

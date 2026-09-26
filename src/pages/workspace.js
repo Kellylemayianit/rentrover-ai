@@ -8,9 +8,8 @@
  *           loaded (see utilities/askEngine.js) — it does not run new
  *           searches itself, that's Stays' job
  *   Cart  — your picks, checkout via a real booking platform (in an
- *           in-app browser), your booking history, and your contact
- *           profile — cart + bookings + profile in one pane, no
- *           separate account/admin area
+ *           in-app browser), and your booking history — tied to your
+ *           account once you sign in (top bar), so it survives a refresh
  *
  * There is no other page in this app.
  */
@@ -22,8 +21,9 @@ import {
   addToCart, removeFromCart, isInCart,
   getCart, getCartCount, onChange as onCartChange,
 } from '../services/cartStore.js';
-import { createOrder, getOrders, onChange as onOrdersChange } from '../services/ordersStore.js';
-import { getProfile, saveProfile } from '../services/profileStore.js';
+import { createOrder, getOrders, claimGuestOrders, onChange as onOrdersChange } from '../services/ordersStore.js';
+import { signUp, login, logout, currentUser, isLoggedIn, onChange as onAuthChange } from '../services/authStore.js';
+import { getTheme, toggleTheme } from '../services/themeStore.js';
 import { buildBookingMessage } from '../utilities/booking.js';
 import { waLink, telegramLink, wechatContact, openExternal } from '../utilities/channelLinks.js';
 import { CHECKOUT_PLATFORMS, buildCheckoutUrl } from '../utilities/platformLinks.js';
@@ -52,6 +52,7 @@ const ASK_SUGGESTIONS = [
 let messagesEl, askInputEl;
 let currentResults = [];
 let compareIds = [];
+let authMode = 'login'; // 'login' | 'signup' — which form the auth modal shows
 
 export function renderWorkspacePage(root) {
   currentResults = [];
@@ -60,13 +61,16 @@ export function renderWorkspacePage(root) {
   root.innerHTML = `
     <div class="app-shell" data-component="workspace-page">
       <header class="top-bar">
+        <button class="top-bar__account" id="account-btn" data-action="open-account"></button>
         <div class="top-bar__brand"><span class="top-bar__mark">🧭</span> RentRover AI</div>
+        <button class="top-bar__theme" id="theme-btn" data-action="toggle-theme" aria-label="Toggle dark mode"></button>
       </header>
 
       <div class="app-panes" id="app-panes" data-pane="stays">
-        <section class="pane pane--stays" id="pane-stays">
+        <section class="pane pane--stays glass" id="pane-stays">
           <header class="pane__header">
-            <span>📍 Stays</span>
+            <span></span>
+            <h2>📍 Stays</h2>
             <button class="btn btn--sm btn--outline" data-action="view-map">Map</button>
           </header>
           <form class="pane-search" id="stays-search-form">
@@ -80,8 +84,8 @@ export function renderWorkspacePage(root) {
           <button class="compare-fab" id="compare-fab" data-action="open-comparison" hidden>Compare 2 stays →</button>
         </section>
 
-        <section class="pane pane--ask" id="pane-ask">
-          <header class="pane__header"><span>💬 Ask</span></header>
+        <section class="pane pane--ask glass" id="pane-ask">
+          <header class="pane__header"><span></span><h2>💬 Ask</h2><span></span></header>
           <div class="chat-messages" id="chat-messages"></div>
           <form class="chat-footer" id="ask-form">
             <div class="chat-input-row">
@@ -91,13 +95,13 @@ export function renderWorkspacePage(root) {
           </form>
         </section>
 
-        <section class="pane pane--cart" id="pane-cart">
-          <header class="pane__header"><span>🧳 Cart</span></header>
+        <section class="pane pane--cart glass" id="pane-cart">
+          <header class="pane__header"><span></span><h2>🧳 Cart</h2><span></span></header>
           <div class="pane__body" id="cart-body"></div>
         </section>
       </div>
 
-      <nav class="bottom-nav" id="bottom-nav">
+      <nav class="bottom-nav glass" id="bottom-nav">
         <button class="bottom-nav__btn" data-action="switch-pane" data-pane="stays" data-active="true">
           ${ICONS.bed}<span>Stays</span>
         </button>
@@ -115,6 +119,9 @@ export function renderWorkspacePage(root) {
   messagesEl = $('#chat-messages', root);
   askInputEl = $('#ask-input', root);
 
+  renderThemeButton();
+  renderAccountButton();
+
   onCartChange(() => {
     const badge = $('#bottom-nav-cart-badge');
     if (badge) { badge.textContent = getCartCount(); badge.hidden = getCartCount() === 0; }
@@ -122,6 +129,7 @@ export function renderWorkspacePage(root) {
     refreshStaysAddButtons();
   });
   onOrdersChange(renderCartBody);
+  onAuthChange(() => { renderAccountButton(); renderCartBody(); });
 
   $('#stays-search-form', root).addEventListener('submit', e => {
     e.preventDefault();
@@ -144,8 +152,8 @@ export function renderWorkspacePage(root) {
   renderCartBody();
   loadInitialStays();
 
-  // Deep-link support via plain query string (?q=…, ?pane=cart) — there's
-  // no hash routing anymore since this is the only page.
+  // Deep-link support via plain query string — there's no hash routing
+  // anymore since this is the only page.
   const params = new URLSearchParams(window.location.search);
   const deepQ = params.get('q');
   const deepPane = params.get('pane');
@@ -163,6 +171,109 @@ async function loadInitialStays() {
     const grid = $('#stays-results');
     if (grid) grid.innerHTML = `<p class="text-muted text-center" style="padding:2rem 1rem;">Can't reach the search backend right now — try again shortly.</p>`;
   }
+}
+
+// ── Top bar: theme + account ────────────────────────────────
+
+function renderThemeButton() {
+  const btn = $('#theme-btn');
+  if (!btn) return;
+  btn.innerHTML = getTheme() === 'dark' ? ICONS.sun : ICONS.moon;
+}
+
+export function handleToggleTheme() {
+  toggleTheme();
+  renderThemeButton();
+}
+
+function renderAccountButton() {
+  const btn = $('#account-btn');
+  if (!btn) return;
+  const user = currentUser();
+  if (user) {
+    const initial = (user.name || user.email || '?').trim().charAt(0).toUpperCase();
+    btn.innerHTML = `<span class="top-bar__avatar">${initial}</span>`;
+  } else {
+    btn.innerHTML = `${ICONS.user}<span class="top-bar__account-label">Sign in</span>`;
+  }
+}
+
+export function handleOpenAccount() {
+  const user = currentUser();
+  if (user) {
+    openModal({
+      title: 'Your account',
+      bodyHTML: `
+        <p class="text-center" style="margin-bottom:1rem;">
+          Signed in as <strong>${escapeHTML(user.name || user.email)}</strong><br>
+          <span class="text-muted body-sm">${escapeHTML(user.email)}</span>
+        </p>
+        <button class="btn btn--outline btn--block" data-action="do-logout">Log out</button>
+      `,
+    });
+  } else {
+    authMode = 'login';
+    openModal({ title: 'Welcome back', bodyHTML: renderAuthForm() });
+  }
+}
+
+export function handleLogout() {
+  logout();
+  closeModal();
+  toast('Signed out.', { type: 'success' });
+}
+
+export function handleToggleAuthMode() {
+  authMode = authMode === 'login' ? 'signup' : 'login';
+  openModal({ title: authMode === 'login' ? 'Welcome back' : 'Create your account', bodyHTML: renderAuthForm() });
+}
+
+function renderAuthForm() {
+  const isSignup = authMode === 'signup';
+  return `
+    <form id="auth-form" data-mode="${authMode}">
+      <p class="subheading body-sm" style="margin-bottom:1.25rem;">
+        ${isSignup ? 'Save your cart and track bookings across visits.' : "We'll pull up your saved cart and bookings."}
+      </p>
+      ${isSignup ? `
+        <div class="form-field">
+          <label for="auth-name">Name</label>
+          <input id="auth-name" name="name" required autocomplete="name">
+        </div>
+      ` : ''}
+      <div class="form-field">
+        <label for="auth-email">Email</label>
+        <input id="auth-email" name="email" type="email" required autocomplete="email">
+      </div>
+      <div class="form-field">
+        <label for="auth-password">Password</label>
+        <input id="auth-password" name="password" type="password" required minlength="6" autocomplete="${isSignup ? 'new-password' : 'current-password'}">
+      </div>
+      <button type="submit" class="btn btn--primary btn--block" style="margin-top:.5rem;">${isSignup ? 'Create account' : 'Sign in'}</button>
+      <p class="text-center body-sm text-muted" style="margin-top:1rem;">
+        ${isSignup ? 'Already have an account?' : "Don't have an account?"}
+        <button type="button" class="link-btn" data-action="toggle-auth-mode">${isSignup ? 'Sign in' : 'Sign up'}</button>
+      </p>
+    </form>
+  `;
+}
+
+export async function handleAuthSubmit(formEl) {
+  const data = Object.fromEntries(new FormData(formEl).entries());
+  const submitBtn = formEl.querySelector('button[type="submit"]');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Please wait…'; }
+
+  const result = formEl.dataset.mode === 'signup' ? await signUp(data) : await login(data);
+
+  if (!result.ok) {
+    toast(result.error || 'Something went wrong.', { type: 'error' });
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = formEl.dataset.mode === 'signup' ? 'Create account' : 'Sign in'; }
+    return;
+  }
+
+  claimGuestOrders();
+  closeModal();
+  toast(`Signed in as ${result.user.name || result.user.email}.`, { type: 'success' });
 }
 
 // ── Stays pane: the only thing that searches ────────────────────
@@ -203,7 +314,7 @@ function renderStayCard(p) {
   ).join('');
 
   return `
-    <div class="msg-property" data-property-id="${p.id}">
+    <div class="msg-property glass" data-property-id="${p.id}">
       <img class="msg-property__img" src="${p.image}" alt="" loading="lazy">
       <div class="msg-property__body">
         <div class="msg-property__name">${escapeHTML(p.name)}</div>
@@ -304,7 +415,7 @@ function renderMarkdown(text) {
 
 function appendBotMessage(text, { chips = null, chipAction = 'ask-suggestion', highlightIds = [] } = {}) {
   const div = document.createElement('div');
-  div.className = 'msg msg--bot';
+  div.className = 'msg msg--bot glass';
   let html = renderMarkdown(text);
   if (highlightIds.length) {
     html += `<div class="suggestion-chips" style="margin-top:.6rem;">
@@ -348,35 +459,36 @@ export function handleAskQuestion(question) {
   appendBotMessage(text, { highlightIds });
 }
 
-// ── Cart pane: cart + checkout + bookings + profile ─────────────
+// ── Cart pane: cart + checkout + bookings ───────────────────────
 
 function renderCartBody() {
   const el = $('#cart-body');
   if (!el) return;
   const items = getCart();
   const orders = getOrders();
-  const profile = getProfile();
+  const user = currentUser();
 
   el.innerHTML = `
     <div class="cart-section" style="margin-top:0;padding-top:0;border-top:none;">
-      <div class="cart-section__title">Your profile</div>
-      <p class="text-muted body-sm" style="margin-bottom:.6rem;">Used to fill in messages to hosts — not an account, just saved on this device.</p>
-      <form id="profile-form" class="profile-form">
-        <input type="text" name="name" placeholder="Your name" value="${escapeHTML(profile.name || '')}">
-        <input type="text" name="contact" placeholder="Phone or email" value="${escapeHTML(profile.contact || '')}">
-        <button type="submit" class="btn btn--sm btn--outline">Save</button>
-      </form>
+      ${user ? `
+        <p class="text-center body-sm text-muted">Signed in as <strong>${escapeHTML(user.name || user.email)}</strong></p>
+      ` : `
+        <div class="signin-prompt">
+          <p class="text-center body-sm" style="margin-bottom:.6rem;">Sign in to keep your cart and bookings across visits.</p>
+          <button class="btn btn--sm btn--dark" data-action="open-account" style="margin:0 auto;display:block;">Sign in / Create account</button>
+        </div>
+      `}
     </div>
 
     <div class="cart-section">
-      <div class="cart-section__title">Cart</div>
+      <h3>Cart</h3>
       ${items.length ? renderCartItems(items) : renderCartEmpty()}
     </div>
 
     ${items.length ? `
       <div class="cart-section">
-        <div class="cart-section__title">Talk to our team</div>
-        <p class="text-muted body-sm" style="margin-bottom:.75rem;">Send your picks to a person — we'll help you lock it in.</p>
+        <h3>Talk to our team</h3>
+        <p class="text-muted body-sm text-center" style="margin-bottom:.75rem;">Send your picks to a person — we'll help you lock it in.</p>
         <div class="channel-buttons">
           <button class="btn btn--sm btn--outline" data-action="contact-channel" data-channel="whatsapp">💬 WhatsApp</button>
           <button class="btn btn--sm btn--outline" data-action="contact-channel" data-channel="telegram">✈️ Telegram</button>
@@ -387,17 +499,10 @@ function renderCartBody() {
     ` : ''}
 
     <div class="cart-section">
-      <div class="cart-section__title">Your bookings</div>
-      ${orders.length ? renderOrders(orders) : `<p class="text-muted body-sm">Nothing yet — check out through one of the platforms above and it'll show up here.</p>`}
+      <h3>Your bookings</h3>
+      ${orders.length ? renderOrders(orders) : `<p class="text-muted body-sm text-center">Nothing yet — check out through one of the platforms above and it'll show up here.</p>`}
     </div>
   `;
-
-  $('#profile-form', el).addEventListener('submit', e => {
-    e.preventDefault();
-    const data = new FormData(e.target);
-    saveProfile({ name: data.get('name')?.trim() || '', contact: data.get('contact')?.trim() || '' });
-    toast('Saved.', { type: 'success' });
-  });
 }
 
 function renderCartEmpty() {
@@ -443,7 +548,7 @@ const ORDER_STATUS_BADGE = {
 
 function renderOrders(orders) {
   return orders.map(o => `
-    <div class="order-card">
+    <div class="order-card glass">
       <div class="order-card__top">
         <span class="order-card__platform">${escapeHTML(o.platform)}</span>
         <span class="badge ${ORDER_STATUS_BADGE[o.status] || 'badge--neutral'}">${escapeHTML(o.status)}</span>
@@ -469,10 +574,10 @@ export function handleCheckoutPlatform(propertyId, platform) {
 export function handleContactChannel(channel) {
   const items = getCart();
   if (!items.length) return;
-  const profile = getProfile();
+  const user = currentUser();
   const checkIn = $('#date-checkin')?.value || '';
   const checkOut = $('#date-checkout')?.value || '';
-  const message = buildBookingMessage(items, { checkIn, checkOut, guestName: profile.name });
+  const message = buildBookingMessage(items, { checkIn, checkOut, guestName: user?.name });
 
   if (channel === 'whatsapp') openExternal(waLink(message));
   else if (channel === 'telegram') openExternal(telegramLink(message));

@@ -18,7 +18,7 @@ const API_BASE = '';
 
 const DEFAULT_TIMEOUT_MS = 12000;
 
-async function request(path, { params } = {}) {
+async function request(path, { method = 'GET', body, params } = {}) {
   const url = new URL(`${API_BASE}${path}`, window.location.origin);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
@@ -30,8 +30,13 @@ async function request(path, { params } = {}) {
   const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
   try {
-    const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, signal: controller.signal });
-    if (!res.ok) throw new Error(`GET ${path} failed: ${res.status} ${res.statusText}`);
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`${method} ${path} failed: ${res.status} ${res.statusText}`);
     return await res.json();
   } finally {
     clearTimeout(timeout);
@@ -52,4 +57,22 @@ export async function searchProperties(query = '', filters = {}) {
 /** Default/unfiltered catalog — reuses the same endpoint with no query. */
 export async function fetchProperties() {
   return searchProperties('', {});
+}
+
+// ── Auth (NOT YET ON BACKEND) ───────────────────────────────
+// No user-account service is specced yet — these are real REST calls
+// against sensible paths so the frontend is ready the moment one exists.
+// Until then, services/authStore.js catches the failure and falls back to
+// a local-only demo account so the login/signup flow is still usable —
+// see that file for the details, and README for what a real
+// implementation needs to return.
+
+/** POST /api/auth/signup { name, email, password } */
+export async function signUp(payload) {
+  return request('/api/auth/signup', { method: 'POST', body: payload });
+}
+
+/** POST /api/auth/login { email, password } */
+export async function login(payload) {
+  return request('/api/auth/login', { method: 'POST', body: payload });
 }

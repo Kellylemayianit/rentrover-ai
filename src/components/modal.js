@@ -27,7 +27,7 @@ export function openModal({ title, bodyHTML, onClose } = {}) {
       <div class="modal__backdrop" data-action="close-modal"></div>
       <div class="modal__panel">
         <div class="modal__header">
-          <h3 style="font-size:1.1rem;">${title}</h3>
+          <h3>${title}</h3>
           <button class="modal__close" data-action="close-modal" aria-label="Close">&times;</button>
         </div>
         <div class="modal__body">${bodyHTML}</div>

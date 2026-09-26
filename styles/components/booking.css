@@ -1,25 +1,26 @@
 /* ── Ask pane: message log + input (chat-messages/.msg* rendered by
-   pages/workspace.js) ─────────────────────────────────────────── */
-.chat-messages { flex: 1; overflow-y: auto; padding: var(--sp-6) var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-4); background: var(--color-paper); }
+   pages/workspace.js). The pane itself is the glass surface, so these
+   nested elements stay transparent and just add separators. ────────── */
+.chat-messages { flex: 1; overflow-y: auto; padding: var(--sp-6) var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-4); }
 .msg { max-width: 84%; padding: var(--sp-3) var(--sp-4); border-radius: var(--r-lg); font-size: .92rem; line-height: 1.5; }
-.msg--bot { align-self: flex-start; background: var(--color-white); box-shadow: var(--shadow-card); border-bottom-left-radius: var(--r-sm); }
-.msg--user { align-self: flex-end; background: var(--color-ink); color: var(--color-white); border-bottom-right-radius: var(--r-sm); }
+.msg--bot { align-self: flex-start; border-bottom-left-radius: var(--r-sm); }
+.msg--user { align-self: flex-end; background: var(--grey-900); color: var(--white); border-bottom-right-radius: var(--r-sm); }
 .msg__results { display: grid; gap: var(--sp-3); margin-top: var(--sp-3); }
-.msg-property { display: flex; gap: var(--sp-3); background: var(--color-paper); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3); align-items: center; }
+.msg-property { display: flex; gap: var(--sp-3); border-radius: var(--r-md); padding: var(--sp-3); align-items: center; }
 .msg-property__img { width: 64px; height: 64px; border-radius: var(--r-sm); object-fit: cover; flex-shrink: 0; }
 .msg-property__body { flex: 1; min-width: 0; }
 .msg-property__name { font-weight: 700; font-size: .88rem; }
 .msg-property__meta { font-size: .75rem; color: var(--text-muted); }
 .msg-property__price { font-size: .8rem; font-weight: 600; margin-top: 2px; }
 
-.chat-footer { flex-shrink: 0; background: var(--color-white); border-top: 1px solid var(--border); padding: var(--sp-4) var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-3); }
+.chat-footer { flex-shrink: 0; border-top: 1px solid var(--border); padding: var(--sp-4) var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-3); }
 .chat-input-row { display: flex; gap: var(--sp-3); align-items: flex-end; }
-.chat-input { flex: 1; resize: none; border: 1px solid var(--border); border-radius: var(--r-lg); padding: .8rem 1rem; font-size: .92rem; max-height: 120px; }
+.chat-input { flex: 1; resize: none; background: var(--soft-fill); border: 1px solid var(--border); border-radius: var(--r-lg); padding: .8rem 1rem; font-size: .92rem; max-height: 120px; }
 .chat-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-.chat-send-btn { width: 44px; height: 44px; border-radius: var(--r-pill); background: var(--accent-warm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.chat-send-btn { width: 44px; height: 44px; border-radius: var(--r-pill); background: var(--accent); color: var(--white); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-.suggestion-chips { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
-.suggestion-chip { border: 1px solid var(--border); border-radius: var(--r-pill); padding: .4rem .9rem; font-size: .8rem; color: var(--text-muted); background: var(--color-white); }
+.suggestion-chips { display: flex; gap: var(--sp-2); flex-wrap: wrap; justify-content: center; }
+.suggestion-chip { border: 1px solid var(--border); border-radius: var(--r-pill); padding: .4rem .9rem; font-size: .8rem; color: var(--text-muted); background: var(--soft-fill); }
 .suggestion-chip:hover { border-color: var(--accent); color: var(--text-primary); }
 
 .cart-empty { text-align: center; padding: var(--sp-12) var(--sp-4); color: var(--text-muted); }
@@ -34,5 +35,13 @@
 
 .date-row { display: flex; gap: var(--sp-3); margin-bottom: var(--sp-4); }
 .date-row__field { flex: 1; }
-.date-row__label { display: block; font-size: .75rem; color: var(--text-muted); margin-bottom: var(--sp-1); }
-.date-row__input { width: 100%; padding: .6rem .8rem; border: 1px solid var(--border); border-radius: var(--r-md); }
+.date-row__label { display: block; font-size: .75rem; color: var(--text-muted); margin-bottom: var(--sp-1); text-align: center; }
+.date-row__input { width: 100%; padding: .6rem .8rem; background: var(--soft-fill); border: 1px solid var(--border); border-radius: var(--r-md); }
+
+/* ── Auth form (rendered inside the shared modal) ─────────────────── */
+.form-field { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-4); text-align: center; }
+.form-field label { font-size: .8rem; font-weight: 600; }
+.form-field input { padding: .65rem .85rem; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--soft-fill); text-align: center; }
+.form-field input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.signin-prompt { padding: var(--sp-3); border-radius: var(--r-md); background: var(--soft-fill); }
