@@ -1,0 +1,11 @@
+{
+  // Assets live in ./public, kept separate from node_modules/package.json/
+  // wrangler.jsonc at the repo root — per Cloudflare's own guidance, this
+  // is the standard pattern (not a workaround), precisely so a big folder
+  // like node_modules never has a chance to get swept into the upload.
+  "name": "rentrover-ai",
+  "compatibility_date": "2026-10-06",
+  "assets": {
+    "directory": "./public"
+  }
+}
