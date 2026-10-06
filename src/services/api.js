@@ -14,7 +14,7 @@
  */
 
 // TODO: point this at your deployed search backend. Empty = same-origin.
-const API_BASE = '';
+const API_BASE = 'https://rentrover-backend.kaelentechnologies.workers.dev';
 
 const DEFAULT_TIMEOUT_MS = 12000;
 
